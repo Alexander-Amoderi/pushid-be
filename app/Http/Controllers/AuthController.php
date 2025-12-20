@@ -2,84 +2,51 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    // [FUNGSI REGISTER]
+    // ================= REGISTER =================
     public function register(Request $request)
     {
-        // 1. Validasi Input
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users,email',
+            'password' => 'required|min:6',
         ]);
 
-        // 2. Buat User Baru
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
+            'name'     => $request->name,
+            'email'    => $request->email,
             'password' => Hash::make($request->password),
         ]);
 
-        // 3. Buat Token Sanctum
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        // 4. Kirim Respon Sukses
         return response()->json([
-            'message' => 'User registered successfully!',
-            'user' => $user,
-            'token' => $token
+            'message' => 'Register berhasil',
+            'user'    => $user,
         ], 201);
     }
-    
-    // [FUNGSI LOGIN]
+
+    // ================= LOGIN =================
     public function login(Request $request)
     {
-        // 1. Validasi Input
         $request->validate([
-            'email' => 'required|string|email',
-            'password' => 'required|string',
+            'email'    => 'required|email',
+            'password' => 'required',
         ]);
 
-        // 2. Cek Kredensial (Email)
-        $user = User::where('email', $request->email)->first();
-
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            // Melempar error validasi yang akan menghasilkan status 422
-            throw ValidationException::withMessages([
-                'email' => ['Kredensial yang diberikan tidak cocok dengan data kami.'],
-            ]);
+        if (!Auth::attempt($request->only('email', 'password'))) {
+            return response()->json([
+                'message' => 'Email atau password salah'
+            ], 401);
         }
 
-        // 3. Hapus Token Lama (Opsional, untuk keamanan)
-        $user->tokens()->delete();
-
-        // 4. Buat Token Baru
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        // 5. Kirim Respon Sukses
         return response()->json([
-            'message' => 'Login successful!',
-            // Sesuai kebutuhan front-end: mengirim user data dan token
-            'user' => $user, 
-            'token' => $token
-        ], 200);
-    }
-
-    // [FUNGSI LOGOUT]
-    public function logout(Request $request)
-    {
-        // Hapus token yang digunakan untuk autentikasi saat ini
-        $request->user()->currentAccessToken()->delete();
-
-        return response()->json([
-            'message' => 'Logout successful!'
-        ], 200);
+            'message' => 'Login berhasil',
+            'user'    => Auth::user(),
+        ]);
     }
 }
