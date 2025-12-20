@@ -22,7 +22,30 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
+        'status',
+        'ban_until',
+        'admin_note',
+        'last_active_at'
     ];
+
+    // Mengizinkan penambahan data kustom saat data user dikirim ke API
+    protected $appends = ['reports_count'];
+
+    // Aksesor untuk menghitung jumlah laporan yang dibuat oleh user
+    public function getReportsCountAttribute()
+    {
+        // Menghitung total laporan yang masuk ke semua lobby milik user ini
+        return Report::whereHas('lobby', function($query) {
+            $query->where('user_id', $this->id);
+        })->count();
+    }
+
+    // Relasi untuk menghitung jumlah lobby di UsersManagement
+    public function lobbies()
+    {
+        return $this->hasMany(Lobby::class);
+    }
 
     /**
      * The attributes that should be hidden for serialization.
@@ -45,5 +68,9 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function reportsSent() {
+        return $this->hasMany(Report::class, 'reporter_id');
     }
 }

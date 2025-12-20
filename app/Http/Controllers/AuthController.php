@@ -82,4 +82,32 @@ class AuthController extends Controller
             'message' => 'Logout successful!'
         ], 200);
     }
+
+    // [FUNGSI LOGIN ADMIN]
+    public function adminLogin(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+
+        // Cari user berdasarkan email
+        $user = User::where('email', $request->email)->first();
+
+        // Validasi: Cek apakah user ada, password cocok, dan role adalah admin
+        if (!$user || !Hash::check($request->password, $user->password) || $user->role !== 'admin') {
+            return response()->json([
+                'message' => 'Login gagal. Email/Password salah atau Anda bukan Admin.'
+            ], 401);
+        }
+
+        // Buat Token
+        $token = $user->createToken('admin_token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Login Admin Berhasil',
+            'user' => $user,
+            'token' => $token
+        ], 200);
+    }
 }
