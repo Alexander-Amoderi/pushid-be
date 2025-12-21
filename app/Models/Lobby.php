@@ -14,10 +14,11 @@ class Lobby extends Model
     protected $fillable = [
         'user_id',
         'game_name',
+        'rank',
         'title',
         'slug',
         'description',
-        'contact_info',
+        'link',
     ];
 
     public function user(): BelongsTo

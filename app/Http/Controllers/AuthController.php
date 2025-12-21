@@ -24,9 +24,13 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        // Buat token menggunakan Sanctum
+        $token = $user->createToken('auth-token')->plainTextToken;
+
         return response()->json([
             'message' => 'Register berhasil',
             'user'    => $user,
+            'token'   => $token,
         ], 201);
     }
 
@@ -44,9 +48,26 @@ class AuthController extends Controller
             ], 401);
         }
 
+        $user = Auth::user();
+        
+        // Buat token menggunakan Sanctum
+        $token = $user->createToken('auth-token')->plainTextToken;
+
         return response()->json([
             'message' => 'Login berhasil',
-            'user'    => Auth::user(),
+            'user'    => $user,
+            'token'   => $token,
+        ]);
+    }
+
+    // ================= LOGOUT =================
+    public function logout(Request $request)
+    {
+        // Hapus token saat ini
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json([
+            'message' => 'Logout berhasil'
         ]);
     }
 }
