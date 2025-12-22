@@ -26,6 +26,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/lobbies', [LobbyController::class, 'store']);
     Route::delete('/lobbies/{slug}', [LobbyController::class, 'destroy']);
     Route::put('/lobbies/{slug}', [LobbyController::class, 'update']);
+    Route::post('/lobbies/{id}/report', [LobbyController::class, 'reportLobby']);
     Route::post('/logout', [AuthController::class, 'logout']);
 });
 
